@@ -1,3 +1,5 @@
+import controlP5.*;
+import java.awt.Frame;
 /**
  * Codigo de control para programação do Gabinete de Alice
  * 
@@ -6,19 +8,19 @@
  */
 ControlP5 control;
 
-PApplet2 PApp2;
-PFrame2 frame2;
+
 
 Controles controles;
 
 void setup () {
   size (displayWidth, displayHeight/2);  
-  controles = new Controles();
+  controles = new Controles(this);
 }
 
 void draw () { 
-  background(255);
+  background(0);
   
 }
 
+ 
 
