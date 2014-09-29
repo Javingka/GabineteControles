@@ -13,7 +13,7 @@ class PreviewModelo3D {
   PVector normalCamara;
   
   float diametroModelo; //diametro do desenho do modelo
-  PVector angulosCamaraManual; //angulos que determinan a posicao da camara manualmente
+  public PVector angulosCamaraManual; //angulos que determinan a posicao da camara manualmente
   float distanciaFoco;
   PVector distanciaFocoModoExterno;
   
@@ -39,13 +39,15 @@ class PreviewModelo3D {
     distanciaFocoModoExterno = new PVector (0, -200, 400); //vector que permite mudar a distancia de foco na cena grl
     cenarios = new ArrayList <PontoCenario>();
     listaCenariosLigados = new ArrayList <String>();
-    println("Nova clase NavegacaoCam3D");
+    println("clase PreviewModelo3D criada");
   }
   public void agregaUmCenario( PMatrix3D _matrix, String _nome, PVector angulosPos) {
+    
     cenarios.add( new PontoCenario (p5, _matrix, _nome, angulosPos) );
+    println("Um cenario agregado na classe PreviewModelo3D. Nome: "+_nome+" posicao: "+angulosPos);
   }
   public void desenhaModelo() { 
-
+    p5.pushStyle();
 //Linhas dos vectores
     p5.stroke(255,200,120);  p5.line(0,0,0, vectorRotadoA.x, vectorRotadoA.y, vectorRotadoA.z);
     p5.stroke(0,255,0);  p5.line(vectorRotadoA.x, vectorRotadoA.y, vectorRotadoA.z, vectorRotadoAB.x, vectorRotadoAB.y, vectorRotadoAB.z);
@@ -60,7 +62,7 @@ class PreviewModelo3D {
 //Desenho dos cenarios
     for (PontoCenario pc : cenarios) {
       String n = pc.getNome();
-      if (listaCenariosLigados.contains(n)) pc.desenha(diametroModelo); 
+      if (listaCenariosLigados.contains(n)) pc.desenha(diametroModelo, radians(angulosCamaraManual.y)); 
     }
 //Desenho do ponto do olho
     p5.pushMatrix();
@@ -82,6 +84,12 @@ class PreviewModelo3D {
     p5.sphere(4);
     p5.popStyle();
     p5.popMatrix();
+    
+    p5.camera();
+    p5.textAlign(CENTER);
+    p5.textSize(12);
+    p5.text("arraste o mouse para girar o modelo", p5.width/2, p5.height*.9);
+    p5.popStyle();
   }
   private void aplicaCamara( int index ){
     matrixA.reset();
@@ -165,6 +173,7 @@ class PreviewModelo3D {
   public void setAng_X_Camara(float _ang) {    pitchB = _ang;  }
   public void setAng_Y_Camara(float _ang){     headingB = _ang;  }
   public void setAng_Z_Camara(float _ang){     bankB = _ang;  }
+  
 }
 
 class PontoCenario {
@@ -175,6 +184,7 @@ class PontoCenario {
  
  public PontoCenario(PApplet _p5, PMatrix3D _matrix, String _nome, PVector angulos) {
    p5 = _p5;
+   println("novo PontoCenario: " + _nome);
    matrixCenario = _matrix;
    nome = _nome;
    angulosCenario = angulos;
@@ -187,6 +197,7 @@ class PontoCenario {
  }
  public void desenha(float largo){ 
    p5.pushMatrix();
+   p5.pushStyle();
  //  p5.applyMatrix(matrixCenario);
  //println("angulosCenario.x: " + angulosCenario.x);
    p5.rotateX(angulosCenario.x);
@@ -195,8 +206,35 @@ class PontoCenario {
    p5.translate(0, -largo, 0);
    p5.box(10);
    p5.stroke(255);
+   p5.rotateZ(-angulosCenario.z);
+   p5.rotateY(-angulosCenario.y);
+   p5.rotateX(-angulosCenario.x);
+   p5.textSize(20);
    p5.text(nome, 0,0);
    p5.popMatrix();
+   
+   p5.popStyle();
+ }
+ public void desenha(float largo, float angYvar){ //inclui uma variavel para a variação do angulo Y do preview, assim os nomes dos cenarios ficam sempre olhando pra frente 
+   p5.pushMatrix();
+   p5.pushStyle();
+ //  p5.applyMatrix(matrixCenario);
+ //println("angulosCenario.x: " + angulosCenario.x);
+   p5.rotateX(angulosCenario.x);
+   p5.rotateY(angulosCenario.y);
+   p5.rotateZ(angulosCenario.z);
+   p5.translate(0, -largo, 0);
+   p5.box(10);
+   p5.stroke(255);
+   p5.rotateZ(-angulosCenario.z);
+   p5.rotateY(-angulosCenario.y);
+   p5.rotateX(-angulosCenario.x);
+   p5.rotateY(-angYvar);
+   p5.textSize(20);
+   p5.text(nome, 0,0);
+   p5.popMatrix();
+   
+   p5.popStyle();
  }
 
 }
