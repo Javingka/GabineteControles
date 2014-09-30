@@ -43,7 +43,7 @@ void enviaApagaCenario(String nomeCenario){
   
   //String (byte[] bytes) | para converter de volta para string
 }
-/** Envia dados de encendido e apagado de cenários, além de dados de posição no modelo e da câmara */
+/** Envia dados de posição no modelo e da câmara */
 void envioDadosPosicaoCenario(){
   udp.send( indicadorDadosEnviados[2] ); //terceira posição: cenarioPosicao
   
