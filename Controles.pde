@@ -34,13 +34,6 @@ class Controles  implements ControlListener {
   Controles(PApplet p5) {
     this.p5 = p5;
     frame2 = new PFrame2(); 
-
-    //Espera que o PApplet 2 seja incializado antes de continuar
-    println("Inicializando PApplet 2 para previsualização");
-    while ( !PApplet_preview3D.isPreviewModeloOn () ) {
-      if (millis()%1000 < 10 )print(".");
-    }
-    println("");
     
     numeroCenarios = 5;
     control = new ControlP5(this.p5);
@@ -356,7 +349,6 @@ class Controles  implements ControlListener {
     public void setup() {
       println("Inicio setup do PApplet2");
       size(400, 400, P3D);
-      prevModelo = new PreviewModelo3D(this);
       println("Fim setup do PApplet2");
     }
     
@@ -372,7 +364,6 @@ class Controles  implements ControlListener {
       }
       prevModelo.aplicaCamara( getCamaraIn() ); 
       prevModelo.desenhaModelo();
-      
     }
     /** Metodo que é chamado desde a clase Controles para souber quando o PApplet2 estiver pronto com a clase prevModelo instanciada */
     public boolean isPreviewModeloOn() {

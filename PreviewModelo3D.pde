@@ -45,8 +45,10 @@ class PreviewModelo3D {
     
     cenarios.add( new PontoCenario (p5, _matrix, _nome, angulosPos) );
     println("Um cenario agregado na classe PreviewModelo3D. Nome: "+_nome+" posicao: "+angulosPos);
+    println("cenarios.size(): " + cenarios.size());
   }
   public void desenhaModelo() { 
+    println("cenarios.size(): " + cenarios.size());
     p5.pushStyle();
 //Linhas dos vectores
     p5.stroke(255,200,120);  p5.line(0,0,0, vectorRotadoA.x, vectorRotadoA.y, vectorRotadoA.z);
@@ -60,9 +62,14 @@ class PreviewModelo3D {
     p5.stroke(255, 120);    p5.noFill();    p5.sphereDetail(15);
     p5.sphere(diametroModelo*.5);
 //Desenho dos cenarios
+    
     for (PontoCenario pc : cenarios) {
       String n = pc.getNome();
-      if (listaCenariosLigados.contains(n)) pc.desenha(diametroModelo, radians(angulosCamaraManual.y)); 
+      println("listaCenariosLigados.contains("+n+"): " + listaCenariosLigados.contains(n));
+      
+      if (listaCenariosLigados.contains(n)) {
+        pc.desenha(diametroModelo, radians(angulosCamaraManual.y));
+      } 
     }
 //Desenho do ponto do olho
     p5.pushMatrix();
@@ -138,6 +145,7 @@ class PreviewModelo3D {
     if ( !listaCenariosLigados.contains(nomeC) ) {
        listaCenariosLigados.add(nomeC);
     } 
+    
   }
   public void desligaCenario(String nomeC) {
     if ( listaCenariosLigados.contains(nomeC) ) {
