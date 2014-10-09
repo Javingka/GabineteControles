@@ -22,7 +22,9 @@ void setup () {
 
 void draw () { 
   background(0);
-  
+  if (controles.estaSeExecutandoSequencia()) { 
+		controles.gerenciadorSequencia();
+	}
 }
 
 void enviaLigacaoDeCenario(String nomeCenario){

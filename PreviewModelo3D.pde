@@ -48,7 +48,7 @@ class PreviewModelo3D {
     println("cenarios.size(): " + cenarios.size());
   }
   public void desenhaModelo() { 
-    println("cenarios.size(): " + cenarios.size());
+//    println("cenarios.size(): " + cenarios.size());
     p5.pushStyle();
 //Linhas dos vectores
     p5.stroke(255,200,120);  p5.line(0,0,0, vectorRotadoA.x, vectorRotadoA.y, vectorRotadoA.z);
@@ -65,7 +65,7 @@ class PreviewModelo3D {
     
     for (PontoCenario pc : cenarios) {
       String n = pc.getNome();
-      println("listaCenariosLigados.contains("+n+"): " + listaCenariosLigados.contains(n));
+//      println("listaCenariosLigados.contains("+n+"): " + listaCenariosLigados.contains(n));
       
       if (listaCenariosLigados.contains(n)) {
         pc.desenha(diametroModelo, radians(angulosCamaraManual.y));
@@ -181,7 +181,9 @@ class PreviewModelo3D {
   public void setAng_X_Camara(float _ang) {    pitchB = _ang;  }
   public void setAng_Y_Camara(float _ang){     headingB = _ang;  }
   public void setAng_Z_Camara(float _ang){     bankB = _ang;  }
-  
+	public ArrayList<String> getListaCenariosLigados() {
+		return listaCenariosLigados;
+	}  
 }
 
 class PontoCenario {

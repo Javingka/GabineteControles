@@ -1,25 +1,28 @@
-import controlP5.*;
-import java.awt.Frame;
-import java.awt.event.KeyEvent;
-import java.text.*;
+import controlP5.*; 
+import java.awt.Frame; 
+import java.awt.event.KeyEvent; 
+import java.text.*; 
 
-class Controles  implements ControlListener {
-  //Variaveis ajustaveis
-  int indexCamara; //variavel sem utilzar, para exluir tem que mudar alguns métodos
-//  float ang_X_Puntero, ang_Y_Puntero, ang_Z_Puntero;
-//  float ang_X_Camara, ang_Y_Camara, ang_Z_Camara;
-  float zoom; //zoom da visualizacao previa
-
-  boolean event = false; //boolean para souber cada novo evento nos controles
-  boolean preview = false; //Liga o control com as projeções
-  boolean viewScreens = false; //para visualizar os limites da tela de cada projetor
-  boolean camara_In; //Se a visualizacao esta em estado de 3ra pessoa ou 1era
-  boolean cenariosCarregados;
+class Controles  implements ControlListener { 
+	//Variaveis ajustaveis 
+	int indexCamara; //variavel sem utilzar, para exluir tem que mudar alguns métodos 
+	//  float ang_X_Puntero, ang_Y_Puntero, ang_Z_Puntero; //  
+	float ang_X_Camara, ang_Y_Camara, ang_Z_Camara; 
+	float zoom; //zoom da visualizacao previa 
+	boolean event = false; //boolean para souber cada novo evento nos controles 
+	boolean preview = false; //Liga o control com as projeções 
+	boolean viewScreens = false; //para visualizar os limites da tela de cada projetor 
+	boolean camara_In; //Se a visualizacao esta em estado de 3ra pessoa ou 1era 
+	boolean cenariosCarregados;
   boolean anteriorPreview; //boolean para evaluar los cambios entre ocultar e mostrar janela
-  boolean PLAY; 
-  
+  boolean PLAY, switchCenarioSeq; 
+ 	int indiceSequencia; //O indice que define o track com o respetivo cenário que é reproducido segundo a divição do tempo 
+	int limiteTempoCenarioSeq; //almacenará os límite  de tempo para cada cenário reproducido na sequencia 
+ 
   String Xp, Yp, Zp, Xc, Yc, Zc; //nomes dos TextField dos angulos do puntero e da camara
   int numeroCenarios;
+	String [] listaSeqCenarios; //lista que tem o ordem que os cenários serão exhibidos
+	int [] listaTemposSeqCenarios; //array com o tempo em segundos de funcionamento por track. 
   String [] listaNomeCenarios; //uma lista com os nomes dos cenarios existentes
   PVector [] posicoesCenarios; //Posições dos cenarios, o pvector contém os angulos da posição no modelo
   PMatrix3D [] matrixCenarios; //contém as matrices de giro. basicamente os mesmos angulos do PVector, mas aplicados numa matriz
@@ -38,6 +41,8 @@ class Controles  implements ControlListener {
     numeroCenarios = 5;
     control = new ControlP5(this.p5);
     control.addListener(this);
+		listaSeqCenarios = new String [numeroCenarios];	
+		listaTemposSeqCenarios = new int [numeroCenarios];
     listaNomeCenarios = new String [numeroCenarios];
     posicoesCenarios = new PVector[numeroCenarios];
     matrixCenarios = new PMatrix3D[numeroCenarios];
@@ -45,6 +50,7 @@ class Controles  implements ControlListener {
     makePreviewControls();
     criaCenarios(); //Quando não tiver comunicação com o PC cria valores dos cenários
     carregaCenarios();
+		PLAY = false;
     println("Fim construtor classe Controles");
   }
 
@@ -66,6 +72,7 @@ class Controles  implements ControlListener {
       matrixCenarios[i] = criaMatrixFromAngulos(posicoesCenarios[i]); //criação das matrices
     }
   }
+
   /** Metodo para criar matrices 3d com os dados de angulos */
   public PMatrix3D criaMatrixFromAngulos(PVector ang) {
     PMatrix3D cenarioM = new PMatrix3D();
@@ -75,7 +82,8 @@ class Controles  implements ControlListener {
     cenarioM.rotateZ(ang.z);
     return cenarioM;
   }
-  /** Carrega cenarios com a informação do nome, angulos de posição, a matrix de giro e quantidade de cenários no modelo Preview. 
+
+  /** Carrega cenarios com a informação do nome, angulos de posição, a matrix de giro e quantidade de cenários no modelo Preview 
    também define os controles de controlp5 para o sistema de reprodução de cenários em estado de EXHIBIÇÃO*/
   public void carregaCenarios() { 
     int cenariosTotal = numeroCenarios;
@@ -83,19 +91,19 @@ class Controles  implements ControlListener {
 
     int y = (int)(height *.7); //posiçãp inicial de Y para colocar os controles
     
+		//Objetos de texto controlP5
     control.addTextlabel("labelListaCenarios").setText("LISTA DOS CENARIOS EXISTENTES").setPosition(10, y).setColorValue(0xffffffff);
-    control.addTextlabel("labelCenario").setText("ver no modelo                  ir a posicao").setPosition(12, y += 11).setColorValue(0xffffffff); //desenhamos o Texto
+    control.addTextlabel("labelCenario").setText("ver no modelo                  ir a posicao").setPosition(12, y += 11).setColorValue(0xffffffff); 
     
+		/**CRIAÇÃO dos cenários no objeto 'PApplet_preview3D'
+			 CRIAÇÃO dos controles: Toogle: para ver/ocultar o cenario no modelo e | Bang: para levar o pontero do modelo a posição do cenário*/
     for (int i = 0; i < cenariosTotal; i++ ) {
-
       //Pega os valores dos cenarios
       PMatrix3D matrixTem = matrixCenarios[i];
       String nomeTem = listaNomeCenarios[i];
       PVector angs = posicoesCenarios[i];
-
       //Coloca os cenarios dentro do modelo Preview no PApplet2
       PApplet_preview3D.agregaUmCenario(matrixTem, nomeTem, angs);
-
       //Criação dos objetos de control
       String ativador = "ver" + nomeTem; //nome do botao
       control.addToggle(nomeTem, false, 20, y += 15, 9, 9).setLabel(nomeTem).getCaptionLabel().align(LEFT, CENTER).style().marginLeft = 15; //move to the right;//align(22, -5);
@@ -103,11 +111,11 @@ class Controles  implements ControlListener {
     } 
 
     cenariosCarregados = true; //o variavel vira true para indicar que os cenarios já foram carregados
-    println("Processo de carrega de cenarios finalizado\n");
+    println("Processo de carrega de cenarios finalizado");
     criaControlesReproducao(cenariosTotal); 
   }
 
-  /** Criação dos objetos de control que definen parámetros da posição e visualização dos cenários no modelo*/
+  /** CRIAÇÃO dos objetos de control que definen parámetros da posição e visualização dos cenários no modelo*/
   void makePreviewControls() {
     int yt = 25;
     
@@ -142,6 +150,7 @@ class Controles  implements ControlListener {
     control.addBang("zoom_out").setPosition(10, y += 11).setSize(10, 10).plugTo(this).setColorForeground(color(255, 0, 255)).setLabel("      zoom preview out").getCaptionLabel().align(LEFT, CENTER);
   }
   
+	/** CRIAÇÃO dos controles da sequencia de tempo para a reprodução dos cenários */
   void criaControlesReproducao(int cenariosTotal) {
     println("Começa criação de controles para reprodução da experiência");
     timerSequenca = new ControlTimer(); //cria um objeto de control de tempo, o objeto fica contando desde o momento que é criado, quando é usado é seteado para voltar a 0
@@ -156,10 +165,20 @@ class Controles  implements ControlListener {
 
     control.addToggle("PLAY", false, 80, yb + 15, 15, 15).plugTo(this).setLabel("Liga Sequencia        ").getCaptionLabel().align(RIGHT, CENTER);
     println("===================CARREGANDO LISTA DE TRACKS DA SEQUENCA===================");
-    yb = yb + 30; 
+    yb = yb + 50; 
     for (int i = 0; i < cenariosTotal; i++ ) {
       String track = "track" + i;
       control.addDropdownList(track).setPosition(100+(100*(i)), yb).setSize(98, 98).setBackgroundColor(color(190)).setItemHeight(20).setBarHeight(15);//.captionLabel().set(nom);
+			//Quadro de texto para os Segundos de ativação do cenário
+			String trackTime = "trackTime" + i;
+    	control.addTextfield(trackTime, (180+(100*(i))), int (yb - 30 ), 20, 9).plugTo(this).align(0, 0, 10, 5).setValue(20).setLabel(" ");// O texto que vai definir os segundos de ativação do cenário
+		  //Texto que mostra os segundos 
+			int timeValue = 20; 
+			listaTemposSeqCenarios[i] = timeValue;
+			String timeVal = (""+timeValue) ;
+			//println("timeValue: " + control.get(Textfield.class, trackTime ).getValue() + " timeVal: " + timeVal);
+			control.addTextlabel(("label_time_track" + i )).setText("Segundos: "+timeVal).setPosition( (100+(100*(i))), int (yb - 30 ) ).setColorValue(0xffffffff);	
+
       print ("Preenchendo " + track + " con cenários: ");
       for (int j=0; j < listaNomeCenarios.length; j++) {
         print(" cenario " + j + " /");
@@ -169,11 +188,93 @@ class Controles  implements ControlListener {
     }
     println("===================CENARIOS E LISTA DE TRACKS CARREGADOS===================");
   }
-
-  //===========================================================================================================================================
-  // METODOS DE LEITURA DO CONTROLP5 | 
-  //===========================================================================================================================================
   
+ 	/** Atualiza o desenho do tempo */
+  private void mostrarTempoRolando(){
+    tempoEmTexto = timerSequenca.toString(); //incializa o texto de tempo.  
+		tempoEmTexto = "TEMPO: " + tempoEmTexto; 
+		control.get(Textlabel.class, "label_tempo").setText( tempoEmTexto );
+	}
+
+	/** GERENCIA a sequencia de cenários, liga um a um os cenários. para o funcionamento dessa classe primeiro é chamada a clase 
+		'iniciazacaoSequencia' no mesmo momento que o PLAY é presionado */
+	public void gerenciadorSequencia(){
+		mostrarTempoRolando();	
+
+		int seg = timerSequenca.second();
+		if (seg > limiteTempoCenarioSeq ) {
+			switchCenarioSeq = true;	
+		}
+
+		if (switchCenarioSeq) {
+			trocaCenarioSequencia();	
+		}	
+//		println("seg: " + seg + " limiteTempoCenarioSeq: " + limiteTempoCenarioSeq + " indiceSequencia: " + indiceSequencia);
+	}
+
+	/** CARREGA a lista de cenarios da sequencia, e os tempos de cada um */
+	private void inicializacaoSequencia() {
+		println("==================  INICIANDO SEQUENCIA  =====================");
+		switchCenarioSeq = false; //vira 'false' por que a função 'trocaCenarioSeuqencia' vai ser chamado só uma vez quando essa variavel seja 'true'
+  	for (int i = 0; i < numeroCenarios ; i++ ) { //desligamos todos os cenários para ligar na ordem da sequencia
+			control.get(Toggle.class, listaNomeCenarios[i]).setValue(0);
+    	PApplet_preview3D.desligaCenarioNome( listaNomeCenarios[i] );
+      //TODO: enviar dado de desligação do cenario ao PC
+		}	
+		indiceSequencia = 0;		//é uma inicialização, então o valor de indice da sequencia começã em 0
+		limiteTempoCenarioSeq = listaTemposSeqCenarios[indiceSequencia]; 
+		println("primeiro limiteTempoCenarioSeq: " + limiteTempoCenarioSeq); 
+
+		//liga o primeiro cenario
+		String nomeCenario = listaSeqCenarios[indiceSequencia]; 
+		println("nome primeiro Cenario ligando em sequencia: " + nomeCenario);
+		if (nomeCenario != null) {
+			control.get(Toggle.class, nomeCenario ).setValue(1);
+    	PApplet_preview3D.ligaCenarioNome( nomeCenario );
+    	//TODO: enviar dado de desligação do cenario ao PC
+		} else {
+			println("NÃO TEM CENÁRIO NO TRACK " + indiceSequencia + " DA LISTA DE REPRODUÇÃO");
+		}
+		
+	}
+	
+	/** LIGA DESLIGA os cenarios pasando de um a outro */
+	private void trocaCenarioSequencia() {
+		switchCenarioSeq = false;
+		//Desliga o cenario anterior
+		if (listaSeqCenarios[ indiceSequencia ] != null) {
+			control.get(Toggle.class, listaSeqCenarios[ indiceSequencia]).setValue(0);
+	   	PApplet_preview3D.desligaCenarioNome( listaSeqCenarios[ indiceSequencia] );
+      //TODO: enviar dado de desligação do cenario ao PC
+		}
+
+		indiceSequencia++;		
+
+		//Liga o seguinte cenário
+		String nomeCenario = listaSeqCenarios[indiceSequencia]; 
+		if (nomeCenario != null) {
+			control.get(Toggle.class, nomeCenario ).setValue(1);
+    	PApplet_preview3D.ligaCenarioNome( nomeCenario );
+    	//TODO: enviar dado de desligação do cenario ao PC
+		} else {
+			println("NÃO TEM CENÁRIO NO TRACK " + indiceSequencia + " DA LISTA DE REPRODUÇÃO");
+		}
+
+		limiteTempoCenarioSeq += listaTemposSeqCenarios[indiceSequencia]; //Atualiza o limiar do contador de visualização de cenários
+	}
+	/** função para filtrar os segundos e obter o indice da Sequencia segundo o tempo*/ 
+	private boolean evaluaTempo (int tempoIn, int limiarMenor, int limiarMaior) {
+		boolean resp = false;
+		if ( tempoIn > limiarMenor && tempoIn < limiarMaior) {
+			resp = true;
+		}
+		return resp;
+	}
+/**
+  ===========================================================================================================================================
+   METODOS DE LEITURA DO CONTROLP5 | 
+  ===========================================================================================================================================
+ */ 
   boolean temEvento() { //Esse método é chamado desde a clase PApplet_preview3D para souber quando atualizar o preview e as projeções
     if (event) {
       event = false;
@@ -181,14 +282,20 @@ class Controles  implements ControlListener {
     }
     return event;
   }
-  
   /** Nesse método filtramos a info do controlP5 quando:  
-  *   1. For ativado um elemento do tipo 'Group' ou seja da lista drop-down (ainda sem implementar)
-  *   2. é atualizada a informação para a) mostrar/apagar os cenários no modelo | b) definir a posição do 'puntero' no modelo segundo os controles
+  *   1 For ativado um elemento do tipo 'Group' ou seja da lista drop-down (ainda sem implementar)
+  *   2 é atualizada a informação para a) mostrar/apagar os cenários no modelo | b) definir a posição do 'puntero' no modelo segundo os controles
   */
   public void controlEvent(ControlEvent theEvent) {
     if (theEvent.isGroup()) { // Os controles de controlP5 DropdownList são do tipo 'Group', podem ser filtrados aqui
-      println("event from group : "+theEvent.getGroup().getValue()+" from "+theEvent.getGroup());
+      println("event from group : "+theEvent.getGroup().getValue()+" from "+theEvent.getGroup() );
+			int indexCenario = 	(int) theEvent.getGroup().getValue();
+			String indexTrack = theEvent.getGroup().name();
+			indexTrack = indexTrack.substring( indexTrack.length() - 1, indexTrack.length()); //para pegar o número do track no final do nome
+			int it = Integer.parseInt( indexTrack );
+			listaSeqCenarios[it] = listaNomeCenarios[ indexCenario ];
+			print("Lista de sequencia de cenários: ");
+			printArray(listaSeqCenarios);
     } else if (theEvent.isController()) { //Todo o resto dos controis são 'Controllers' e são filtranos aqui e nos seus próprios metodos mais embaixo
       println("Evento detectado: " + theEvent.getController().getName() + " id: " + theEvent.getController().getId() );
 
@@ -224,11 +331,25 @@ class Controles  implements ControlListener {
           cont++;
         }
       } 
+    	for (int i = 0; i < numeroCenarios ; i++ ) {
+				String ativador = "trackTime" + i;	
+        if ( theEvent.getController().getName().equals(ativador) ) {
+					String val = control.get(Textfield.class, ativador).getStringValue();
+					listaTemposSeqCenarios[i] = Integer.parseInt(val);
+					control.get(Textlabel.class, ("label_time_track" + i )).setText("Segundos: " + val );	
+					println("Foi entregado um dado de tempo para o track: " + i + " val: " + val);
+			  }	
+			}
     }
   }
-  //============================================================  TOGGLES  ============================================================//
+  /**============================================================  TOGGLES  ============================================================*/
   public void PLAY (boolean val) {
+		PLAY = val;
     trocaToggleText ("PLAY", "Sequencia ligada       ", "Liga Sequencia        ", val);
+		if (PLAY) {
+			switchCenarioSeq = true;
+			inicializacaoSequencia();	
+		}
   }
   public void viewScreens(boolean val) {
     trocaToggleText ("viewScreens", "        telas visiveis", "        telas invisiveis", val);
@@ -239,7 +360,7 @@ class Controles  implements ControlListener {
   public void camara_In (boolean val) {
     trocaToggleText ("camara_In", "        camara 1ra", "        camara 3ra", val); 
   }
-  //============================================================  SLIDERS  ============================================================//
+  /**============================================================  SLIDERS  ============================================================*/
   public void ang_X_Puntero(float val) {
     control.get(Textfield.class, "Xp").setText( fromFloatToFormatedString (val) ); //O control Xp recebi o valor. Usamos o metodo fromFloatToString() implementado no final dessa aba
   }
@@ -262,14 +383,14 @@ class Controles  implements ControlListener {
     //TODO: enviar os dados do zoom, que representa a distancia entre a câmara e o ponto centro da imagem para o PC
     PApplet_preview3D.prevModelo.setDistanciaFoco( val ); //atualiza o zoom no preview
   }
-  //============================================================  BANGS  ============================================================//
+  /**============================================================  BANGS  ============================================================*/
   public void zoom_out () {
     PApplet_preview3D.generalZoomIn();  //zoom out para ver o modelo de preview mais de longe
   }
   public void zoom_in () { 
     PApplet_preview3D.generalZoomOut();  //zoom in para ver o modelo de preview mais de perto
   }
-  //============================================================  TEXT FIELD  ============================================================//
+  /**============================================================  TEXT FIELD  ============================================================*/
   public void Xp(String theText) {
     setSliderValueFromString ("ang_X_Puntero", theText) ; //O slider ang_X_Puntero recebe theText. Usamos o metodo setSliderValueFromString() implementado no final dessa aba
   }
@@ -288,7 +409,10 @@ class Controles  implements ControlListener {
   public void Zc(String theText) {
     setSliderValueFromString ("ang_Z_Camara", theText) ;
   }
-  //============================================================  GETTERS  ============================================================//
+  /**============================================================  GETTERS  ============================================================*/
+	public boolean estaSeExecutandoSequencia() {
+		return PLAY;
+	}
   public int getCamaraIn() {
     int r = 0;
     if (control.get(Toggle.class, "camara_In").getState()) r = 1;
@@ -321,12 +445,11 @@ class Controles  implements ControlListener {
   public float getDistanciaFoco() {
     return control.getController("zoom").getValue();
   }
- 
-  
-  //===========================================================================================================================================
-  // PFrame 2 | Frame que contém o PApplet da previsualização 3D |
-  //===========================================================================================================================================
-  
+	/**
+	============================================================================================================================================
+	PFrame 2 | Frame que contém o PApplet da previsualização 3D |
+	===========================================================================================================================================
+	*/  
   public class PFrame2 extends Frame {
     public PFrame2() {
       println("Construtor de PFrame2");
@@ -395,11 +518,11 @@ class Controles  implements ControlListener {
       if (prevModelo != null) prevModelo.zoomOut();
     }
   }
-
-  //===========================================================================================================================================
-  // ControlP5 | Metodos utilizados na leitura dos dados de ControlP5  
-  //===========================================================================================================================================
-  
+	/**
+	===========================================================================================================================================
+	 ControlP5 | Metodos utilizados na leitura dos dados de ControlP5  
+	===========================================================================================================================================
+	*/  
   public String fromFloatToFormatedString (float val) {
     double number = val;
     DecimalFormat numberFormat = new DecimalFormat("#.00");
