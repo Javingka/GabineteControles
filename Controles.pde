@@ -34,6 +34,7 @@ class Controles  implements ControlListener {
   PFrame2 frame2;
   PApplet p5;
 
+	/** ==========================================	Construtor da classe ================================================ */
   Controles(PApplet p5) {
     this.p5 = p5;
     frame2 = new PFrame2(); 
@@ -166,6 +167,8 @@ class Controles  implements ControlListener {
     control.addToggle("PLAY", false, 80, yb + 15, 15, 15).plugTo(this).setLabel("Liga Sequencia        ").getCaptionLabel().align(RIGHT, CENTER);
     println("===================CARREGANDO LISTA DE TRACKS DA SEQUENCA===================");
     yb = yb + 50; 
+		int timeValue = 4; 
+
     for (int i = 0; i < cenariosTotal; i++ ) {
       String track = "track" + i;
       control.addDropdownList(track).setPosition(100+(100*(i)), yb).setSize(98, 98).setBackgroundColor(color(190)).setItemHeight(20).setBarHeight(15);//.captionLabel().set(nom);
@@ -173,7 +176,6 @@ class Controles  implements ControlListener {
 			String trackTime = "trackTime" + i;
     	control.addTextfield(trackTime, (180+(100*(i))), int (yb - 30 ), 20, 9).plugTo(this).align(0, 0, 10, 5).setValue(20).setLabel(" ");// O texto que vai definir os segundos de ativação do cenário
 		  //Texto que mostra os segundos 
-			int timeValue = 20; 
 			listaTemposSeqCenarios[i] = timeValue;
 			String timeVal = (""+timeValue) ;
 			//println("timeValue: " + control.get(Textfield.class, trackTime ).getValue() + " timeVal: " + timeVal);
@@ -188,7 +190,10 @@ class Controles  implements ControlListener {
     }
     println("===================CENARIOS E LISTA DE TRACKS CARREGADOS===================");
   }
-  
+	/**
+  ===========================================================================================================================================
+  	MÉTODOS DE GERENCIAMENTO DA SEQUENCIA DE CENÁRIOS 
+  ===========================================================================================================================================*/ 
  	/** Atualiza o desenho do tempo */
   private void mostrarTempoRolando(){
     tempoEmTexto = timerSequenca.toString(); //incializa o texto de tempo.  
@@ -231,7 +236,12 @@ class Controles  implements ControlListener {
 		if (nomeCenario != null) {
 			control.get(Toggle.class, nomeCenario ).setValue(1);
     	PApplet_preview3D.ligaCenarioNome( nomeCenario );
-    	//TODO: enviar dado de desligação do cenario ao PC
+    	//TODO: enviar dado de ligação do cenario ao PC
+			
+			//TROCA PUNTERO
+			PVector novaPosicao = PApplet_preview3D.prevModelo.getPositionCenarioByName( nomeCenario );  
+			println( "novaPos: "+ novaPosicao );
+			setNovoValorPuntero( novaPosicao ); //Troca de posição o puntero 
 		} else {
 			println("NÃO TEM CENÁRIO NO TRACK " + indiceSequencia + " DA LISTA DE REPRODUÇÃO");
 		}
@@ -256,25 +266,21 @@ class Controles  implements ControlListener {
 			control.get(Toggle.class, nomeCenario ).setValue(1);
     	PApplet_preview3D.ligaCenarioNome( nomeCenario );
     	//TODO: enviar dado de desligação do cenario ao PC
+
+			PVector novaPosicao = PApplet_preview3D.prevModelo.getPositionCenarioByName( nomeCenario );  
+			println( "novaPos: "+ novaPosicao );
+			setNovoValorPuntero( novaPosicao ); //Troca de posição o puntero 
 		} else {
 			println("NÃO TEM CENÁRIO NO TRACK " + indiceSequencia + " DA LISTA DE REPRODUÇÃO");
 		}
 
 		limiteTempoCenarioSeq += listaTemposSeqCenarios[indiceSequencia]; //Atualiza o limiar do contador de visualização de cenários
 	}
-	/** função para filtrar os segundos e obter o indice da Sequencia segundo o tempo*/ 
-	private boolean evaluaTempo (int tempoIn, int limiarMenor, int limiarMaior) {
-		boolean resp = false;
-		if ( tempoIn > limiarMenor && tempoIn < limiarMaior) {
-			resp = true;
-		}
-		return resp;
-	}
-/**
+	
+	/**
   ===========================================================================================================================================
    METODOS DE LEITURA DO CONTROLP5 | 
-  ===========================================================================================================================================
- */ 
+  =========================================================================================================================================== */ 
   boolean temEvento() { //Esse método é chamado desde a clase PApplet_preview3D para souber quando atualizar o preview e as projeções
     if (event) {
       event = false;
@@ -321,12 +327,7 @@ class Controles  implements ControlListener {
           if ( theEvent.getController().getName().equals(ativador) ) {
             println("Posição do puntero para cenário: " + n);
             PVector novaPos = posicoesCenarios[cont]; //getAngulosCenario(n); //getAngulosCenario() é do PApplet principal, pega os dados da clase EsferaBase
-            control.getController("ang_X_Puntero").setValue(TWO_PI-novaPos.x); //TWO-PI permite cambiar o sentido de giro. ControlP2, troca o valor de novaPos.x, a resta neutraliza a mudanza
-            control.getController("ang_Y_Puntero").setValue(TWO_PI-novaPos.y);
-            control.getController("ang_Z_Puntero").setValue(TWO_PI-novaPos.z);
-            control.getController("ang_X_Puntero").update();
-            control.getController("ang_Y_Puntero").update();
-            control.getController("ang_Z_Puntero").update();
+						setNovoValorPuntero( novaPos ); //DEFINE NOVA POSIÇÃO para o puntero. função mas embaixo em 'SETTERS'
           }
           cont++;
         }
@@ -445,6 +446,15 @@ class Controles  implements ControlListener {
   public float getDistanciaFoco() {
     return control.getController("zoom").getValue();
   }
+  /**============================================================  SETTERS  ============================================================*/
+	private void setNovoValorPuntero( PVector np ){
+    control.getController("ang_X_Puntero").setValue(TWO_PI-np.x); //TWO-PI permite cambiar o sentido de giro. ControlP2, troca o valor de novaPos.x, a resta neutraliza a mudanza
+    control.getController("ang_Y_Puntero").setValue(TWO_PI-np.y);
+    control.getController("ang_Z_Puntero").setValue(TWO_PI-np.z);
+    control.getController("ang_X_Puntero").update();
+    control.getController("ang_Y_Puntero").update();
+    control.getController("ang_Z_Puntero").update();
+	}
 	/**
 	============================================================================================================================================
 	PFrame 2 | Frame que contém o PApplet da previsualização 3D |

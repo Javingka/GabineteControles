@@ -181,10 +181,20 @@ class PreviewModelo3D {
   public void setAng_X_Camara(float _ang) {    pitchB = _ang;  }
   public void setAng_Y_Camara(float _ang){     headingB = _ang;  }
   public void setAng_Z_Camara(float _ang){     bankB = _ang;  }
-	public ArrayList<String> getListaCenariosLigados() {
-		return listaCenariosLigados;
-	}  
-}
+	public ArrayList<String> getListaCenariosLigados() {		return listaCenariosLigados;	}  
+	/**=================================================== GETTERS ==================================================*/
+	public PVector getPositionCenarioByName( String nomeEntrada ) {
+		PVector p = new PVector();
+		for (int i = 0 ; i < cenarios.size() ; i++ ) {
+			PontoCenario c = cenarios.get(i);
+			if (c.getNome().equals( nomeEntrada ) ) {
+				p = c.getAngulosCenarios();
+				break;
+			}
+		}
+		return p;
+	}
+ }
 
 class PontoCenario {
  PApplet p5;
