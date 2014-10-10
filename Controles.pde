@@ -259,7 +259,10 @@ class Controles  implements ControlListener {
 		}
 
 		indiceSequencia++;		
-
+		if ( indiceSequencia > listaSeqCenarios.length - 1 ) {
+      control.get(Toggle.class, "PLAY").setValue(false);
+			return;
+		}
 		//Liga o seguinte cenário
 		String nomeCenario = listaSeqCenarios[indiceSequencia]; 
 		if (nomeCenario != null) {
