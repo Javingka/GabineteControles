@@ -14,7 +14,7 @@ class PreviewModelo3D {
   
   float diametroModelo; //diametro do desenho do modelo
   public PVector angulosCamaraManual; //angulos que determinan a posicao da camara manualmente
-  float distanciaFoco;
+  float distanciaFoco;  
   PVector distanciaFocoModoExterno;
   
   ArrayList <PontoCenario> cenarios;
